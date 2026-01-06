@@ -12,30 +12,40 @@ class DashboardController extends Controller
     // Fungsi untuk menampilkan Halaman Dashboard
     public function index()
     {
-        // 1. Ambil data sensor paling baru
+        // 1. Ambil data umum (Sensor & Log)
         $sensor = SensorData::latest()->first();
-
-        // 2. Ambil 5 kegiatan pertanian terakhir
         $logs = FarmingLog::latest()->take(5)->get();
 
-        // 3. Ambil semua data alat (Pompa, Kipas, dll) untuk fitur kontrol
-        $actuators = Actuator::all();
+        // 2. Cek Role User yang sedang login
+        $user = auth()->user();
 
-        // 4. Kirim SEMUA data (sensor, logs, actuators) ke tampilan
-        return view('dashboard', compact('sensor', 'logs', 'actuators'));
+        if ($user->role === 'admin') {
+            // ADMIN: Butuh data Actuators untuk kontrol alat
+            $actuators = Actuator::all();
+
+            // Arahkan ke folder 'admin'
+            return view('admin.dashboard', compact('sensor', 'logs', 'actuators'));
+        } else {
+            // PETANI: Tidak butuh data Actuators (karena cuma monitoring)
+
+            // Arahkan ke folder 'petani'
+            return view('petani.dashboard', compact('sensor', 'logs'));
+        }
     }
 
     // Fungsi Baru: Untuk memproses tombol ON/OFF
     public function toggleActuator($id)
     {
-        // Cari alat berdasarkan ID
-        $tool = Actuator::findOrFail($id);
+        // PENGAMANAN: Cek apakah user adalah admin?
+        if (auth()->user()->role !== 'admin') {
+            return redirect()->back()->with('error', 'Akses ditolak! Hanya Admin yang boleh menyalakan alat.');
+        }
 
-        // Ubah statusnya (Kalau Nyala jadi Mati, kalau Mati jadi Nyala)
+        // Kalau Admin, baru boleh lanjut...
+        $tool = Actuator::findOrFail($id);
         $tool->is_active = !$tool->is_active;
         $tool->save();
 
-        // Kembali ke halaman dashboard dengan pesan sukses
         return redirect()->back()->with('success', 'Status ' . $tool->name . ' berhasil diubah.');
     }
 }

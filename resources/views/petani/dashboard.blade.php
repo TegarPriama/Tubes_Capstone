@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Tani - Desa Kedung Dalem</title>
+    <title>Dashboard Petani - Smart Tani</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -15,7 +15,7 @@
     </style>
 </head>
 
-<body>
+<body class="bg-gray-100">
 
     <nav class="bg-green-700 text-white shadow-lg">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
@@ -25,7 +25,7 @@
                 <div>
                     <h1 class="text-xl font-bold">Smart Tani</h1>
                     <p class="text-xs text-green-200">
-                        Halo, {{ Auth::user()->name }} ({{ ucfirst(Auth::user()->role) }})
+                        Halo, {{ Auth::user()->name }} (Mitra Tani)
                     </p>
                 </div>
             </div>
@@ -36,8 +36,8 @@
                 <form action="{{ route('logout') }}" method="POST" class="inline">
                     @csrf
                     <button type="submit"
-                        class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-2 rounded transition">
-                        <i class="fa-solid fa-sign-out-alt"></i> Logout
+                        class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-2 rounded transition shadow">
+                        <i class="fa-solid fa-sign-out-alt mr-1"></i> Logout
                     </button>
                 </form>
             </div>
@@ -47,8 +47,8 @@
     <div class="container mx-auto px-6 py-8">
 
         @if(session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <span class="block sm:inline">{{ session('success') }}</span>
+        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded shadow-sm" role="alert">
+            <span class="block sm:inline font-semibold">{{ session('success') }}</span>
         </div>
         @endif
 
@@ -118,7 +118,9 @@
                 Terakhir diperbarui: {{ $sensor->created_at->format('d M Y, H:i') }}
             </div>
             @else
-            <div class="bg-red-100 text-red-700 p-4 rounded">Belum ada data sensor.</div>
+            <div class="bg-red-100 text-red-700 p-4 rounded text-center">
+                <i class="fa-solid fa-circle-exclamation mr-2"></i> Belum ada data sensor.
+            </div>
             @endif
         </div>
 
@@ -129,8 +131,8 @@
                 </h3>
 
                 <a href="{{ route('logs.create') }}"
-                    class="bg-green-600 text-white px-4 py-2 text-sm rounded hover:bg-green-700 transition inline-block">
-                    + Catat Kegiatan
+                    class="bg-green-600 text-white px-4 py-2 text-sm rounded hover:bg-green-700 transition shadow inline-flex items-center">
+                    <i class="fa-solid fa-plus mr-2"></i> Catat Kegiatan
                 </a>
 
             </div>
@@ -151,56 +153,27 @@
                             <td class="px-6 py-4">{{ \Carbon\Carbon::parse($log->activity_date)->format('d/m/Y') }}</td>
                             <td class="px-6 py-4 font-semibold">{{ $log->officer_name }}</td>
                             <td class="px-6 py-4">
-                                <span class="bg-blue-100 text-blue-800 py-1 px-3 rounded-full text-xs">
+                                <span class="bg-blue-100 text-blue-800 py-1 px-3 rounded-full text-xs font-semibold">
                                     {{ $log->activity_type }}
                                 </span>
                             </td>
                             <td class="px-6 py-4">{{ $log->growth_phase }}</td>
-                            <td class="px-6 py-4 text-gray-500">{{ $log->description }}</td>
+                            <td class="px-6 py-4 text-gray-500 italic">{{
+                                \Illuminate\Support\Str::limit($log->description, 50) }}</td>
                         </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
             @if($logs->isEmpty())
-            <div class="p-6 text-center text-gray-500">Belum ada catatan kegiatan.</div>
+            <div class="p-6 text-center text-gray-500 bg-gray-50">Belum ada catatan kegiatan.</div>
             @endif
-        </div>
-
-        <div class="mt-8 mb-12">
-            <h3 class="font-bold text-gray-700 mb-4 text-xl border-l-4 border-blue-600 pl-3">
-                <i class="fa-solid fa-gamepad mr-2"></i> Kontrol Perangkat
-            </h3>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                @foreach($actuators as $alat)
-                <div
-                    class="bg-white p-6 rounded-xl shadow-md flex justify-between items-center border-l-4 {{ $alat->is_active ? 'border-green-500' : 'border-gray-400' }}">
-                    <div>
-                        <h4 class="font-bold text-lg text-gray-800">{{ $alat->name }}</h4>
-                        <p class="text-sm {{ $alat->is_active ? 'text-green-600' : 'text-gray-400' }}">
-                            Status: {{ $alat->is_active ? 'MENYALA (ON)' : 'MATI (OFF)' }}
-                        </p>
-                    </div>
-
-                    <form action="{{ route('actuator.toggle', $alat->id) }}" method="POST">
-                        @csrf
-                        <button type="submit"
-                            class="w-14 h-8 rounded-full p-1 transition-colors duration-300 focus:outline-none {{ $alat->is_active ? 'bg-green-500' : 'bg-gray-300' }}">
-                            <div
-                                class="w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 {{ $alat->is_active ? 'translate-x-6' : '' }}">
-                            </div>
-                        </button>
-                    </form>
-                </div>
-                @endforeach
-            </div>
         </div>
 
     </div>
 
     <footer class="bg-gray-800 text-white text-center py-6 mt-12">
-        <p class="text-sm">© 2025 Smart Tani Greenhouse Desa Kedung Dalem.</p>
+        <p class="text-sm font-medium">© 2025 Smart Tani Greenhouse Desa Kedung Dalem.</p>
         <p class="text-xs text-gray-500 mt-1">Telkom University Surabaya - Capstone Project</p>
     </footer>
 
